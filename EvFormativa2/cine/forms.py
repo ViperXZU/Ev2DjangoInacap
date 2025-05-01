@@ -16,12 +16,12 @@ class PeliculasForm(forms.ModelForm):
 
 class SalaDeCineForm(forms.ModelForm):
     class Meta:
-        model = Peliculas
+        model = SalaDeCine
         fields = '__all__'
         widgets = {
             'nombre': forms.TextInput(attrs={'class': 'form-control'}),
             'capacidad': forms.NumberInput(attrs={'class': 'form-control'}),
-            'tipoDeSala': forms.Select(choices=[('2D', '2D'), ('3D', '3D'), ('IMAX', 'IMAX')], attrs={'class': 'form-control'}),
+            'tipoDeSala': forms.Select(attrs={'class': 'form-control'}),
         }
 
 
