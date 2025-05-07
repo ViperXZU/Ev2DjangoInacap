@@ -1,6 +1,6 @@
 from django import forms
-from .models import Peliculas
-from .models import SalaDeCine
+from .models import Peliculas, SalaDeCine, Funcion
+
 
 class PeliculasForm(forms.ModelForm):
     class Meta:
@@ -22,6 +22,16 @@ class SalaDeCineForm(forms.ModelForm):
             'nombre': forms.TextInput(attrs={'class': 'form-control'}),
             'capacidad': forms.NumberInput(attrs={'class': 'form-control'}),
             'tipoDeSala': forms.Select(attrs={'class': 'form-control'}),
+        }
+
+class FuncionForm(forms.ModelForm):
+    class Meta:
+        model = Funcion
+        fields = 'pelicula', 'sala', 'fecha_hora_inicio'
+        widgets = {
+            'pelicula': forms.Select(attrs={'class': 'form-control'}),
+            'sala': forms.Select(attrs={'class': 'form-control'}),
+            'fecha_hora_inicio': forms.DateTimeInput(attrs={'class': 'form-control', 'type': 'datetime-local'}),
         }
 
 

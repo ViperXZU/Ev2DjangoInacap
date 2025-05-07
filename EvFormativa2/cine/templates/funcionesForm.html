@@ -1,0 +1,298 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% if form.instance.id %}Editar{% else %}Agregar{% endif %} Función</title>
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Font Awesome para iconos -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Flatpickr para el selector de fecha y hora -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+    <style>
+        .form-container {
+            max-width: 800px;
+            margin: 0 auto;
+        }
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+        .btn-container {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 1.5rem;
+        }
+        .card {
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+            border: none;
+        }
+        .card-header {
+            background-color: #f8f9fa;
+            border-bottom: 1px solid #e9ecef;
+        }
+        .required-field::after {
+            content: " *";
+            color: red;
+        }
+        .help-text {
+            font-size: 0.875rem;
+            color: #6c757d;
+            margin-top: 0.25rem;
+        }
+        .error-feedback {
+            width: 100%;
+            margin-top: 0.25rem;
+            font-size: 0.875rem;
+            color: #dc3545;
+        }
+        .movie-info, .sala-info {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f8f9fa;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+        .movie-duration {
+            font-weight: bold;
+            color: #0d6efd;
+        }
+        .sala-type {
+            font-weight: bold;
+            color: #6c757d;
+        }
+        .calculated-time {
+            margin-top: 1rem;
+            padding: 0.75rem;
+            background-color: #e9ecef;
+            border-radius: 0.25rem;
+            border-left: 4px solid #0d6efd;
+        }
+    </style>
+</head>
+<body>
+    <div class="container mt-4 mb-5">
+        <div class="form-container">
+            <div class="card">
+                <div class="card-header">
+                    <h2 class="mb-0">
+                        <i class="fas fa-film me-2"></i>
+                        {% if form.instance.id %}Editar{% else %}Agregar Nueva{% endif %} Función
+                    </h2>
+                </div>
+                <div class="card-body">
+                    {% if error_message %}
+                        <div class="alert alert-danger">
+                            {{ error_message }}
+                        </div>
+                    {% endif %}
+                    
+                    <form method="POST" novalidate>
+                        {% csrf_token %}
+                        
+                        {% if form.non_field_errors %}
+                            <div class="alert alert-danger">
+                                {% for error in form.non_field_errors %}
+                                    {{ error }}
+                                {% endfor %}
+                            </div>
+                        {% endif %}
+                        
+                        <!-- Campo Película -->
+                        <div class="form-group">
+                            <label for="id_pelicula" class="form-label required-field">Película</label>
+                            <select name="pelicula" id="id_pelicula" class="form-select" required>
+                                <option value="">Selecciona una película</option>
+                                {% for pelicula in peliculas %}
+                                    <option value="{{ pelicula.id }}" 
+                                        data-duracion="{{ pelicula.duracion }}"
+                                        {% if form.pelicula.value|stringformat:"i" == pelicula.id|stringformat:"i" %}selected{% endif %}>
+                                        {{ pelicula.nombre }} ({{ pelicula.duracion }} min)
+                                    </option>
+                                {% endfor %}
+                            </select>
+                            {% if form.pelicula.errors %}
+                                <div class="error-feedback">
+                                    {% for error in form.pelicula.errors %}
+                                        {{ error }}
+                                    {% endfor %}
+                                </div>
+                            {% endif %}
+                            <div id="movie-info" class="movie-info" style="display: none;">
+                                Duración: <span id="movie-duration" class="movie-duration">0</span> minutos
+                            </div>
+                        </div>
+                        
+                        <!-- Campo Sala -->
+                        <div class="form-group">
+                            <label for="id_sala" class="form-label required-field">Sala de Cine</label>
+                            <select name="sala" id="id_sala" class="form-select" required>
+                                <option value="">Selecciona una sala</option>
+                                {% for sala in salas %}
+                                    <option value="{{ sala.id }}" 
+                                        data-tipo="{{ sala.tipoDeSala }}"
+                                        data-capacidad="{{ sala.capacidad }}"
+                                        {% if form.sala.value|stringformat:"i" == sala.id|stringformat:"i" %}selected{% endif %}>
+                                        {{ sala.nombre }} ({{ sala.tipoDeSala }})
+                                    </option>
+                                {% endfor %}
+                            </select>
+                            {% if form.sala.errors %}
+                                <div class="error-feedback">
+                                    {% for error in form.sala.errors %}
+                                        {{ error }}
+                                    {% endfor %}
+                                </div>
+                            {% endif %}
+                            <div id="sala-info" class="sala-info" style="display: none;">
+                                Tipo: <span id="sala-type" class="sala-type"></span> | 
+                                Capacidad: <span id="sala-capacity"></span> asientos
+                            </div>
+                        </div>
+                        
+                        <!-- Campo Fecha y Hora de Inicio -->
+                        <div class="form-group">
+                            <label for="id_fecha_hora_inicio" class="form-label required-field">Fecha y Hora de Inicio</label>
+                            <input type="text" name="fecha_hora_inicio" id="id_fecha_hora_inicio" class="form-control datetimepicker" required 
+                                {% if form.fecha_hora_inicio.value %}value="{{ form.fecha_hora_inicio.value|date:'Y-m-d H:i' }}"{% endif %}>
+                            {% if form.fecha_hora_inicio.errors %}
+                                <div class="error-feedback">
+                                    {% for error in form.fecha_hora_inicio.errors %}
+                                        {{ error }}
+                                    {% endfor %}
+                                </div>
+                            {% endif %}
+                        </div>
+                        
+                        <!-- Información de Hora de Término (calculada) -->
+                        <div id="calculated-end-time" class="calculated-time" style="display: none;">
+                            <strong>Hora de término (calculada):</strong> <span id="end-time">--:--</span>
+                            <div class="help-text">
+                                La hora de término se calcula automáticamente basada en la duración de la película.
+                            </div>
+                        </div>
+                        
+                        <div class="btn-container">
+                            <a href="{% url 'funcion_list' %}" class="btn btn-secondary">
+                                <i class="fas fa-arrow-left me-1"></i> Cancelar
+                            </a>
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-save me-1"></i> 
+                                {% if form.instance.id %}Actualizar{% else %}Guardar{% endif %} Función
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bootstrap JS Bundle with Popper -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <!-- Flatpickr JS -->
+    <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+    <script src="https://cdn.jsdelivr.net/npm/flatpickr/dist/l10n/es.js"></script>
+    
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Inicializar el selector de fecha y hora
+            flatpickr(".datetimepicker", {
+                enableTime: true,
+                dateFormat: "Y-m-d H:i",
+                time_24hr: true,
+                locale: "es",
+                minuteIncrement: 5,
+                minDate: "today"
+            });
+            
+            // Mostrar información de la película seleccionada
+            const peliculaSelect = document.getElementById('id_pelicula');
+            const movieInfo = document.getElementById('movie-info');
+            const movieDuration = document.getElementById('movie-duration');
+            
+            peliculaSelect.addEventListener('change', function() {
+                if (this.value) {
+                    const selectedOption = this.options[this.selectedIndex];
+                    const duracion = selectedOption.getAttribute('data-duracion');
+                    movieDuration.textContent = duracion;
+                    movieInfo.style.display = 'block';
+                    updateEndTime();
+                } else {
+                    movieInfo.style.display = 'none';
+                }
+            });
+            
+            // Mostrar información de la sala seleccionada
+            const salaSelect = document.getElementById('id_sala');
+            const salaInfo = document.getElementById('sala-info');
+            const salaType = document.getElementById('sala-type');
+            const salaCapacity = document.getElementById('sala-capacity');
+            
+            salaSelect.addEventListener('change', function() {
+                if (this.value) {
+                    const selectedOption = this.options[this.selectedIndex];
+                    const tipo = selectedOption.getAttribute('data-tipo');
+                    const capacidad = selectedOption.getAttribute('data-capacidad');
+                    salaType.textContent = tipo;
+                    salaCapacity.textContent = capacidad;
+                    salaInfo.style.display = 'block';
+                } else {
+                    salaInfo.style.display = 'none';
+                }
+            });
+            
+            // Calcular y mostrar la hora de término
+            const fechaHoraInput = document.getElementById('id_fecha_hora_inicio');
+            const calculatedEndTime = document.getElementById('calculated-end-time');
+            const endTimeSpan = document.getElementById('end-time');
+            
+            function updateEndTime() {
+                if (peliculaSelect.value && fechaHoraInput.value) {
+                    const duracion = parseInt(movieDuration.textContent);
+                    const startDate = new Date(fechaHoraInput.value);
+                    
+                    if (!isNaN(startDate.getTime())) {
+                        const endDate = new Date(startDate.getTime() + duracion * 60000);
+                        
+                        // Formatear la fecha de término
+                        const day = endDate.getDate().toString().padStart(2, '0');
+                        const month = (endDate.getMonth() + 1).toString().padStart(2, '0');
+                        const year = endDate.getFullYear();
+                        const hours = endDate.getHours().toString().padStart(2, '0');
+                        const minutes = endDate.getMinutes().toString().padStart(2, '0');
+                        
+                        endTimeSpan.textContent = `${day}/${month}/${year} ${hours}:${minutes}`;
+                        calculatedEndTime.style.display = 'block';
+                    }
+                } else {
+                    calculatedEndTime.style.display = 'none';
+                }
+            }
+            
+            fechaHoraInput.addEventListener('change', updateEndTime);
+            
+            // Inicializar los campos si ya tienen valores (edición)
+            if (peliculaSelect.value) {
+                const selectedOption = peliculaSelect.options[peliculaSelect.selectedIndex];
+                const duracion = selectedOption.getAttribute('data-duracion');
+                movieDuration.textContent = duracion;
+                movieInfo.style.display = 'block';
+            }
+            
+            if (salaSelect.value) {
+                const selectedOption = salaSelect.options[salaSelect.selectedIndex];
+                const tipo = selectedOption.getAttribute('data-tipo');
+                const capacidad = selectedOption.getAttribute('data-capacidad');
+                salaType.textContent = tipo;
+                salaCapacity.textContent = capacidad;
+                salaInfo.style.display = 'block';
+            }
+            
+            if (peliculaSelect.value && fechaHoraInput.value) {
+                updateEndTime();
+            }
+        });
+    </script>
+</body>
+</html>
