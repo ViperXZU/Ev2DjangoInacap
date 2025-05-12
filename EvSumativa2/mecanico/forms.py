@@ -14,20 +14,21 @@ class ClientForm(ModelForm):
 class VehicleForm(ModelForm):
     class Meta:
         model = Vehicle
-        fields = ['brand', 'model', 'year', 'client']
+        fields = ['brand', 'model', 'year', 'client', 'plate']
         widgets = {
             'brand': forms.TextInput(attrs={'class': 'form-control'}),
             'model': forms.TextInput(attrs={'class': 'form-control'}),
             'year': forms.NumberInput(attrs={'class': 'form-control'}),
             'client': forms.Select(attrs={'class': 'form-control'}),
+            'plate': forms.TextInput(attrs={'class': 'form-control'}),
         }
 
 class ServiceForm(ModelForm):
     class Meta:
         model = Service
-        fields = ['descripction', 'cost', 'vehicle', 'date']
+        fields = ['description', 'cost', 'vehicle', 'date']
         widgets = {
-            'descripction': forms.TextInput(attrs={'class': 'form-control'}),
+            'description': forms.TextInput(attrs={'class': 'form-control'}),
             'cost': forms.NumberInput(attrs={'class': 'form-control'}),
             'vehicle': forms.Select(attrs={'class': 'form-control'}),
             'date': forms.DateInput(attrs={'class': 'form-control', 'type': 'date'}),

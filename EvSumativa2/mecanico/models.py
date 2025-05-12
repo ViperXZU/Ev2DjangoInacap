@@ -10,7 +10,7 @@ class Client(models.Model):
         return self.name
     
 class Vehicle(models.Model):
-    id = models.AutoField(primary_key=True)
+    plate = models.CharField(max_length=10, unique=True, primary_key=True, default='ABC123')
     brand = models.CharField(max_length=100)
     model = models.CharField(max_length=100)
     year = models.IntegerField()
@@ -21,7 +21,7 @@ class Vehicle(models.Model):
 
 class Service(models.Model):
     id = models.AutoField(primary_key=True)
-    descripction = models.CharField(max_length=255)
+    description = models.CharField(max_length=255)
     cost = models.DecimalField(max_digits=10, decimal_places=2)
     vehicle = models.ForeignKey(Vehicle, on_delete=models.CASCADE)
     date = models.DateField()
